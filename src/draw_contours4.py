@@ -18,7 +18,8 @@ def onStonesTb(self):
 
     # imgray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
 
-    saturation = BrightnessAndContrastAuto(blur, 0)
+    saturation = MorphClose(blur, 1)
+    saturation = BrightnessAndContrastAuto(saturation, 0)
     # cv2.imshow("BrightnessAndContrastAuto", saturation)
 
     thres = 100

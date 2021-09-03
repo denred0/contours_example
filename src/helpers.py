@@ -51,9 +51,9 @@ def BrightnessAndContrastAuto(im_source, clipHistPercent=0):
     return dst
 
 
-def MorphClose(im_source, minThickess):
-    size = int(minThickess / 2)
-    size = 5
+def MorphClose(im_source, size):
+    # size = int(minThickess / 2)
+    # size = 10
     anchor = (size, size)
     element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * size + 1, 2 * size + 1), anchor)
 
