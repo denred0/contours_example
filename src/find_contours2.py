@@ -22,20 +22,35 @@ def onStonesTb(self):
     minSizePx = round(minSizeMM / pix2mm)
     closerSize = minSizePx / 2.0
 
-    saturation = MorphClose(saturation, closerSize)
+    saturation = MorphClose(saturation, 1)
     saturation = BrightnessAndContrastAuto(saturation, 1)
 
     ret, bwStones = cv2.threshold(saturation, thStone, 255, cv2.THRESH_BINARY_INV)
+
+    k = 6
+
+    bwStones[:k, :] = 255
+    bwStones[bwStones.shape[0] - k:, k:] = 255
+    bwStones[:, :k] = 255
+    bwStones[k:, bwStones.shape[1] - k:] = 255
 
     contours_stone, hierarchy = cv2.findContours(bwStones, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(saturation, contours_stone, -1, (255, 255, 255), 2)
     cv2.imshow("Threshold Stones+Shadow on Saturation", saturation)
 
     # if removeShadow:
-    brightness = MorphClose(brightness, minSizeMM)
+    brightness = MorphClose(brightness, 1)
     brightness = BrightnessAndContrastAuto(brightness, 1)
 
     ret, bwShadow = cv2.threshold(brightness, thShadow, 255, cv2.THRESH_BINARY)
+
+    k = 6
+
+    bwShadow[:k, :] = 255
+    bwShadow[bwShadow.shape[0] - k:, k:] = 255
+    bwShadow[:, :k] = 255
+    bwShadow[k:, bwShadow.shape[1] - k:] = 255
+
     # contours.clear()
     contours_shadow, hierarchy = cv2.findContours(bwShadow, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(brightness, contours_shadow, -1, (255, 255, 255), 2)
@@ -62,7 +77,7 @@ if __name__ == '__main__':
     image = cv2.imread('data/stone1.jpg')
 
     # set defaults
-    minSizeMM = 80  # width in millimetre
+    minSizeMM = 10  # width in millimetre
     thStone = 100  # max saturation for stones
     thShadow = 128  # max brightness for shadow
     removeShadow = 1  # try to remove shadows (1=Yes 0=No)

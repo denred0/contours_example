@@ -2,17 +2,18 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import time
+import os
+from pathlib import Path
 
 from helpers import BrightnessAndContrastAuto, MorphClose
 
 
+def onStonesTb(img):
+    image = cv2.imread(str(img), cv2.IMREAD_COLOR)
 
-
-
-def onStonesTb(self):
-    thStone = cv2.getTrackbarPos('thStone', 'Stones')
-    thShadow = cv2.getTrackbarPos('thShadow', 'Stones')
-    minSizeMM = cv2.getTrackbarPos('Size(mm)', 'Stones')
+    # thStone = cv2.getTrackbarPos('thStone', 'Stones')
+    # thShadow = cv2.getTrackbarPos('thShadow', 'Stones')
+    # minSizeMM = cv2.getTrackbarPos('Size(mm)', 'Stones')
 
     h, w = image.shape[:2]
 
@@ -21,16 +22,42 @@ def onStonesTb(self):
 
     # imgray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
 
+    # src_hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
 
+    # saturation = src_hsv[..., 1]
+    # brightness = src_hsv[..., 2]
 
     saturation = MorphClose(blur, 1)
     saturation = BrightnessAndContrastAuto(saturation, 0)
     cv2.imshow("BrightnessAndContrastAuto", saturation)
+    cv2.waitKey(0)
+
+    # # if removeShadow:
+    # brightness = MorphClose(brightness, 1)
+    # brightness = BrightnessAndContrastAuto(brightness, 0)
+    #
+    # ret, bwShadow = cv2.threshold(brightness, 100, 255, cv2.THRESH_BINARY)
+    # cv2.imshow("bwShadow", brightness)
+    # cv2.waitKey(0)
+
+    # contours_shadow, hierarchy = cv2.findContours(bwShadow, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    # cv2.drawContours(brightness, contours_shadow, -1, (255, 255, 255), 2)
+    # cv2.imshow("Threshold Shadow on Brightness", brightness)
+
+
+
+    # # contours.clear()
+    #
+    # bwShadow[:k, :] = 255
+    # bwShadow[bwStones.shape[0] - k:, k:] = 255
+    # bwShadow[:, :k] = 255
+    # bwShadow[k:, bwShadow.shape[1] - k:] = 255
 
     thres = 100
     cont = []
     while not cont:
         ret, bwStones = cv2.threshold(saturation, thres, 255, cv2.THRESH_BINARY_INV)
+        # cv2.bitwise_or(bwStones, bwShadow, bwStones)
 
         k = 6
 
@@ -38,8 +65,6 @@ def onStonesTb(self):
         bwStones[bwStones.shape[0] - k:, k:] = 255
         bwStones[:, :k] = 255
         bwStones[k:, bwStones.shape[1] - k:] = 255
-
-        # cv2.imshow("threshold", bwStones)
 
         contours_stone, hierarchy = cv2.findContours(bwStones, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         # c = max(contours_stone, key=cv2.contourArea)
@@ -110,8 +135,17 @@ def onStonesTb(self):
     # for i in range(len(contours)):
     #     cv2.polylines(dst, contours[i], True, (0, 255, 0), 2)
 
-    cv2.imshow(winName, dst)
-    cv2.imwrite('result/1.jpg', dst)
+    # cv2.imshow(winName, dst)
+    cv2.imwrite('result/' + img.name, dst)
+
+
+def get_all_files_in_folder(folder, types):
+    files_grabbed = []
+    for t in types:
+        files_grabbed.extend(folder.rglob(t))
+    files_grabbed = sorted(files_grabbed, key=lambda x: x)
+    # files_grabbed = [file[:-4] for file in files_grabbed if 'orig' in file.lower()]
+    return files_grabbed
 
 
 if __name__ == '__main__':
@@ -119,7 +153,7 @@ if __name__ == '__main__':
     knowDistanceMM = 150
     pix2mm = knowDistancePX / knowDistanceMM
 
-    image = cv2.imread('data/stone2.jpg')
+    image = cv2.imread('data/stone4.jpg')
     # pad_size = 8
     # image = cv2.copyMakeBorder(
     #     image, pad_size, pad_size, pad_size, pad_size, borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
@@ -130,17 +164,21 @@ if __name__ == '__main__':
     thShadow = 128  # max brightness for shadow
     removeShadow = 1  # try to remove shadows (1=Yes 0=No)
 
-    winName = 'Stones'
-    cv2.imshow(winName, image)
-    # cv2.createTrackbar("Size(mm)", winName, minSizeMM, 100, onStonesTb)
-    # cv2.createTrackbar("thStone", winName, thStone, 255, onStonesTb)
-    # cv2.createTrackbar("thShadow", winName, thShadow, 255, onStonesTb)
-    # cv2.createTrackbar("remove Shadow", winName, removeShadow, 1, onStonesTb)
+    dir = 'data'
+    for subdir, dirs, files in os.walk(dir):
+        for folder in dirs:
+            p = os.path.join(dir, folder) + os.path.sep
+            images = get_all_files_in_folder(Path(p), ['*.jpg'])
 
+            for img in images:
+                onStonesTb(img)
 
-
-
-
-
-    onStonesTb(1)
-    cv2.waitKey(0)
+    # winName = 'Stones'
+    # cv2.imshow(winName, image)
+    # # cv2.createTrackbar("Size(mm)", winName, minSizeMM, 100, onStonesTb)
+    # # cv2.createTrackbar("thStone", winName, thStone, 255, onStonesTb)
+    # # cv2.createTrackbar("thShadow", winName, thShadow, 255, onStonesTb)
+    # # cv2.createTrackbar("remove Shadow", winName, removeShadow, 1, onStonesTb)
+    #
+    #
+    # cv2.waitKey(0)
